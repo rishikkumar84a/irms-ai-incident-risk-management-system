@@ -10,7 +10,8 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "react/no-unescaped-entities": "off",
-      "prefer-const": "warn"
+      "prefer-const": "warn",
+      "no-console": "off"
     }
   },
   // Override default ignores of eslint-config-next.
