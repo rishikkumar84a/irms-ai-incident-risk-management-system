@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
             relatedRiskId: searchParams.get('relatedRiskId') || undefined,
         });
 
-        let where: Prisma.TaskWhereInput = {};
+        const where: Prisma.TaskWhereInput = {};
 
         // Show only assigned tasks for employees
         if (!isAdmin({ user } as any) && !isManager({ user } as any)) {

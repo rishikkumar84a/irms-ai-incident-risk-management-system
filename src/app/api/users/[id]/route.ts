@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        let updateData = validationResult.data;
+        const updateData = validationResult.data;
 
         // Non-admins cannot change role or department
         if (!isAdminUser) {

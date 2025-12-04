@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
             search: searchParams.get('search') || undefined,
         });
 
-        let where: Prisma.RiskWhereInput = {};
+        const where: Prisma.RiskWhereInput = {};
 
         if (isAdmin({ user } as any)) {
             // Admins see everything

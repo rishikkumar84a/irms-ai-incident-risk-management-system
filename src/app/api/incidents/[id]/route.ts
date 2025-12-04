@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        let updateData = validationResult.data;
+        const updateData = validationResult.data;
 
         // Only managers/admins can assign incidents
         if (updateData.assignedToId && !isManagerOrAdmin({ user } as any)) {

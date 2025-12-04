@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Build where clause based on role
-        let where: Prisma.IncidentWhereInput = {};
+        const where: Prisma.IncidentWhereInput = {};
 
         if (isAdmin({ user } as any)) {
             // Admins see everything
