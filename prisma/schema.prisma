@@ -1,0 +1,237 @@
+// Prisma Schema for AI-Powered Incident & Risk Management System (IRMS)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum IncidentStatus {
+  NEW
+  IN_REVIEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Likelihood {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Impact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RiskStatus {
+  OPEN
+  MONITORING
+  MITIGATED
+  CLOSED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  reportedIncidents Incident[] @relation("ReportedBy")
+  assignedIncidents Incident[] @relation("AssignedTo")
+  ownedRisks        Risk[]
+  assignedTasks     Task[]
+  comments          Comment[]
+  auditLogs         AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([departmentId])
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users     User[]
+  incidents Incident[]
+  risks     Risk[]
+
+  @@index([name])
+}
+
+model IncidentCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  incidents Incident[]
+
+  @@index([name])
+}
+
+model Incident {
+  id                     String         @id @default(cuid())
+  title                  String
+  description            String
+  status                 IncidentStatus @default(NEW)
+  severity               Severity       @default(MEDIUM)
+  categoryId             String?
+  category               IncidentCategory? @relation(fields: [categoryId], references: [id])
+  reportedById           String
+  reportedBy             User           @relation("ReportedBy", fields: [reportedById], references: [id])
+  assignedToId           String?
+  assignedTo             User?          @relation("AssignedTo", fields: [assignedToId], references: [id])
+  departmentId           String
+  department             Department     @relation(fields: [departmentId], references: [id])
+  occurredAt             DateTime       @default(now())
+  resolvedAt             DateTime?
+  
+  // AI Fields
+  aiSummary              String?
+  aiSeveritySuggestion   Severity?
+  aiRecommendedActions   String?
+  
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  // Relations
+  tasks    Task[]
+  comments Comment[]
+
+  @@index([status])
+  @@index([severity])
+  @@index([departmentId])
+  @@index([reportedById])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model Risk {
+  id                     String     @id @default(cuid())
+  title                  String
+  description            String
+  category               String
+  likelihood             Likelihood @default(MEDIUM)
+  impact                 Impact     @default(MEDIUM)
+  status                 RiskStatus @default(OPEN)
+  ownerId                String
+  owner                  User       @relation(fields: [ownerId], references: [id])
+  departmentId           String
+  department             Department @relation(fields: [departmentId], references: [id])
+  mitigationPlan         String?
+  
+  // AI Fields
+  aiMitigationSuggestions String?
+  
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+
+  // Relations
+  tasks    Task[]
+  comments Comment[]
+
+  @@index([status])
+  @@index([departmentId])
+  @@index([ownerId])
+  @@index([createdAt])
+}
+
+model Task {
+  id                String     @id @default(cuid())
+  title             String
+  description       String?
+  relatedIncidentId String?
+  relatedIncident   Incident?  @relation(fields: [relatedIncidentId], references: [id], onDelete: Cascade)
+  relatedRiskId     String?
+  relatedRisk       Risk?      @relation(fields: [relatedRiskId], references: [id], onDelete: Cascade)
+  assignedToId      String
+  assignedTo        User       @relation(fields: [assignedToId], references: [id])
+  status            TaskStatus @default(TODO)
+  dueDate           DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([relatedIncidentId])
+  @@index([relatedRiskId])
+  @@index([dueDate])
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  body       String
+  authorId   String
+  author     User      @relation(fields: [authorId], references: [id])
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  riskId     String?
+  risk       Risk?     @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+
+  @@index([incidentId])
+  @@index([riskId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  entityType  String   // INCIDENT, RISK, TASK, USER, etc.
+  entityId    String
+  action      String   // CREATED, UPDATED, DELETED, STATUS_CHANGED, etc.
+  changedById String
+  changedBy   User     @relation(fields: [changedById], references: [id])
+  changedAt   DateTime @default(now())
+  metadata    Json?    // Additional context about the change
+
+  @@index([entityType, entityId])
+  @@index([changedById])
+  @@index([changedAt])
+}
