@@ -127,7 +127,11 @@ export default function LoginPage() {
 
             {/* Footer */}
             <div className="absolute bottom-4 text-center text-sm text-white/60">
-                <p>Rishik Kumar Chaurasiya | <a href="https://github.com/rishikkumar84a" className="hover:text-white">GitHub</a> | <a href="https://linkedin.com/in/rishikkumar84a" className="hover:text-white">LinkedIn</a></p>
+                <p>
+                    Rishik Kumar Chaurasiya |{' '}
+                    <a href="https://github.com/rishikkumar84a" className="hover:text-white">GitHub</a> |{' '}
+                    <a href="https://www.linkedin.com/in/rishikkumar84ya/" className="hover:text-white">LinkedIn</a>
+                </p>
             </div>
         </div>
     );
